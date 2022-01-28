@@ -49,14 +49,14 @@ app.get('/participants', async (req, res) => {
   }
 });
 
-app.post('messages', async (req, res) => {
+app.post('/messages', async (req, res) => {
   try {
     const message = req.body;
 
     const to = req.body.to;
     const text = req.body.text;
     const type = req.body.type;
-    const from = req.header.User;
+    const from = req.headers.user;
     const time = 'HH:MM:SS'
 
     const messages = await db.collection('messages').insertOne({
