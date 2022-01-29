@@ -2,6 +2,7 @@ import express from 'express';
 import { MongoClient } from 'mongodb';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import dayjs from 'dayjs';
 
 const app = express();
 app.use(express.json());
@@ -30,7 +31,7 @@ app.post('/participants', async (req, res) => {
       to: 'Todos',
       text: 'entra na sala...',
       type: 'status',
-      time: 'HH:MM:SS',
+      time: dayjs(Date.now()).format('HH:mm:ss'),
     });
 
       activeUser = name;
@@ -59,7 +60,7 @@ app.post('/messages', async (req, res) => {
     const text = req.body.text;
     const type = req.body.type;
     const from = req.headers.user;
-    const time = 'HH:MM:SS';
+    const time = dayjs(Date.now()).format('HH:mm:ss');
 
     const messages = await db.collection('messages').insertOne({
       to: to,
@@ -99,7 +100,9 @@ app.get('/messages', async (req, res) => {
   }
 });
 
-app.post('/status', (req, res) => {});
+app.post('/status', (req, res) => {
+  //usar set no user correspondente ao header
+});
 
 function checkStatus() {}
 
