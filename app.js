@@ -79,11 +79,8 @@ app.post('/messages', async (req, res) => {
 app.get('/messages', async (req, res) => {
   try {
 
-    //first you gotta filter the messages
-    //either Todos or to = user header
     const messages = await db.collection('messages').find().toArray();
     const filteredMessages = messages.filter(message => ( message.to === 'Todos' || message.to === activeUser || message.from === activeUser))
-
 
     if(!req.query.limit) {
       console.log('sem limites vei')
@@ -101,7 +98,6 @@ app.get('/messages', async (req, res) => {
 });
 
 app.post('/status', (req, res) => {
-  //usar set no user correspondente ao header
 });
 
 function checkStatus() {}
