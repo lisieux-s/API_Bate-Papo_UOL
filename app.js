@@ -20,7 +20,7 @@ app.post('/participants', async (req, res) => {
     const name = req.body.name;
     const participant = await db.collection('participants').insertOne({
       name: name,
-      lastStatus: Date.now()
+      lastStatus: Date.now(),
     });
 
     const message = await db.collection('messages').insertOne({
@@ -28,8 +28,8 @@ app.post('/participants', async (req, res) => {
       to: 'Todos',
       text: 'entra na sala...',
       type: 'status',
-      time: 'HH:MM:SS'
-    })
+      time: 'HH:MM:SS',
+    });
 
     res.sendStatus(201);
   } catch (err) {
@@ -40,7 +40,6 @@ app.post('/participants', async (req, res) => {
 
 app.get('/participants', async (req, res) => {
   try {
-    
     const participants = await db.collection('participants').find().toArray();
     res.send(participants);
   } catch (err) {
@@ -57,33 +56,41 @@ app.post('/messages', async (req, res) => {
     const text = req.body.text;
     const type = req.body.type;
     const from = req.headers.user;
-    const time = 'HH:MM:SS'
+    const time = 'HH:MM:SS';
 
     const messages = await db.collection('messages').insertOne({
       to: to,
       text: text,
       type: type,
       from: from,
-      time: time
-    })
-    res.sendStatus(201)
-
+      time: time,
+    });
+    res.sendStatus(201);
   } catch (err) {
     console.log(err);
     res.sendStatus(err);
   }
 });
 
-
 app.get('/messages', async (req, res) => {
   try {
-    const limit = req.query.limit;
+    const messages = await db.collection('messages').find().toArray();
+    
+    if(!req.query.limit) {
+      console.log('sem limites vei')
+      res.send(messages)
+      return
+    } else {
+      const limit = req.query.limit;
+      res.send([...messages].reverse().slice(0, limit).reverse())
+    }
+    
 
-    const messages = await db.collection('messages').find().toArray()
-    res.send(messages)
-  } catch(err) {
+
+
+  } catch (err) {
     console.log(err);
-    res.sendStatus(err)
+    res.sendStatus(err);
   }
 });
 
@@ -94,6 +101,3 @@ function checkStatus() {}
 app.listen(5000, () => {
   console.log('Listening on port 5000');
 });
-
-//por que pag atualiza depois que eu mando msg?
-//se eu cancelo, user fica null e posso enviar o q eu quiser
