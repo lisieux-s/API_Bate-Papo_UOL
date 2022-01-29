@@ -15,6 +15,8 @@ mongoClient.connect(() => {
   db = mongoClient.db('bate_papo_uol');
 });
 
+let activeUser = ''
+
 app.post('/participants', async (req, res) => {
   try {
     const name = req.body.name;
@@ -31,6 +33,7 @@ app.post('/participants', async (req, res) => {
       time: 'HH:MM:SS',
     });
 
+      activeUser = name;
     res.sendStatus(201);
   } catch (err) {
     console.log(err);
@@ -74,19 +77,21 @@ app.post('/messages', async (req, res) => {
 
 app.get('/messages', async (req, res) => {
   try {
+
+    //first you gotta filter the messages
+    //either Todos or to = user header
     const messages = await db.collection('messages').find().toArray();
-    
+    const filteredMessages = messages.filter(message => ( message.to === 'Todos' || message.to === activeUser || message.from === activeUser))
+
+
     if(!req.query.limit) {
       console.log('sem limites vei')
-      res.send(messages)
+      res.send(filteredMessages)
       return
     } else {
       const limit = req.query.limit;
-      res.send([...messages].reverse().slice(0, limit).reverse())
+      res.send([...filteredMessages].reverse().slice(0, limit).reverse())
     }
-    
-
-
 
   } catch (err) {
     console.log(err);
