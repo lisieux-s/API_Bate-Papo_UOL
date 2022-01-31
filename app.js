@@ -18,14 +18,21 @@ mongoClient.connect(() => {
 });
 
 let activeUser = '';
+let activeParticipants = '';
 
 const nameSchema = joi.string().required();
 
-const schema = joi.object({
+const messageSchema = joi.object({
   to: joi.string().required(),
-  type: joi.string().required(),
-  //from: joi.string()
+  text: joi.string().required(),
+  type: joi
+    .string()
+    .required()
+    .valid(...['message', 'private_message']),
+  from: joi.valid(activeParticipants),
 });
+
+const fromSchema = joi.valid(activeParticipants)
 
 app.post('/participants', async (req, res) => {
   try {
@@ -66,6 +73,7 @@ app.post('/participants', async (req, res) => {
 app.get('/participants', async (req, res) => {
   try {
     const participants = await db.collection('participants').find().toArray();
+    activeParticipants = participants;
     res.send(participants);
   } catch (err) {
     console.log(err);
@@ -82,16 +90,26 @@ app.post('/messages', async (req, res) => {
     const type = req.body.type;
     const from = req.headers.user;
     const time = dayjs(Date.now()).format('HH:mm:ss');
-    //FRONT ISSUE? TIMESTAMP SOMETIMES DOES NOT APPEAR, ALONG WITH EDIT/DELETE ICONS
 
-    const messages = await db.collection('messages').insertOne({
-      to: to,
-      text: text,
-      type: type,
-      from: from,
-      time: time,
+    const validation = messageSchema.validate(message, {
+      abortEarly: true,
     });
-    res.sendStatus(201);
+
+
+    if (validation.error) {
+      console.log(validation.error.details);
+      res.sendStatus(422);
+    } else {
+      const messages = await db.collection('messages').insertOne({
+        to: to,
+        text: text,
+        type: type,
+        from: from,
+        time: time,
+      });
+
+      res.sendStatus(201);
+    }
   } catch (err) {
     console.log(err);
     res.sendStatus(err);
