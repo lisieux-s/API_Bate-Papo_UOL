@@ -164,8 +164,6 @@ app.delete('/messages/:message_id', async (req, res) => {
   const user = req.headers.user;
   const id = req.params.message_id
   const message = await db.collection('messages').find({_id: {$eq: new ObjectId(id)}}).toArray();
-  console.log(message)
-  console.log(message[0].from)
 
   if(!message) {
     res.sendStatus(404);
