@@ -1,5 +1,5 @@
 import express from 'express';
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import dayjs from 'dayjs';
@@ -62,7 +62,6 @@ app.post('/participants', async (req, res) => {
       res.sendStatus(201);
     }
   } catch (err) {
-    console.log(err);
     res.sendStatus(err);
   }
 });
@@ -73,7 +72,6 @@ app.get('/participants', async (req, res) => {
     activeParticipants = participants;
     res.send(participants);
   } catch (err) {
-    console.log(err);
     res.sendStatus(err);
   }
 });
@@ -93,7 +91,6 @@ app.post('/messages', async (req, res) => {
     });
 
     if (validation.error) {
-      console.log(validation.error.details);
       res.sendStatus(422);
 
     } else {
@@ -108,7 +105,6 @@ app.post('/messages', async (req, res) => {
       res.sendStatus(201);
     }
   } catch (err) {
-    console.log(err);
     res.sendStatus(err);
   }
 });
@@ -124,7 +120,6 @@ app.get('/messages', async (req, res) => {
     );
 
     if (!req.query.limit) {
-      console.log('sem limites vei');
       res.send(filteredMessages);
       return;
     } else {
@@ -132,7 +127,6 @@ app.get('/messages', async (req, res) => {
       res.send([...filteredMessages].reverse().slice(0, limit).reverse());
     }
   } catch (err) {
-    console.log(err);
     res.sendStatus(err);
   }
 });
@@ -155,7 +149,6 @@ setInterval(async () => {
   const inactiveParticipants = await db.collection('participants').find({lastStatus: {$lt: timeLimit}}).toArray()
   await db.collection('participants').deleteMany({lastStatus: {$lt: timeLimit}})
 
-  console.log(inactiveParticipants)
   inactiveParticipants.map(async inactiveParticipant => {
     await db.collection('messages').insertOne({
       from: inactiveParticipant.name,
@@ -165,8 +158,23 @@ setInterval(async () => {
       time: dayjs(Date.now()).format('HH:mm:ss')
     })
   })
-
 }, 15000)
+
+app.delete('/messages/:message_id', async (req, res) => {
+  const user = req.headers.user;
+  const id = req.params.message_id
+  const message = await db.collection('messages').find({_id: {$eq: new ObjectId(id)}}).toArray();
+  console.log(message)
+  console.log(message[0].from)
+
+  if(!message) {
+    res.sendStatus(404);
+  } else if (message[0].from !== user) {
+    res.sendStatus(401)
+  } else {
+    await db.collection('messages').deleteOne({_id: {$eq: new ObjectId(id)}})
+  }
+});
 
 
 app.listen(5000, () => {
