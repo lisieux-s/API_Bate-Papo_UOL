@@ -32,8 +32,6 @@ const messageSchema = joi.object({
   from: joi.valid(activeParticipants),
 });
 
-const fromSchema = joi.valid(activeParticipants)
-
 app.post('/participants', async (req, res) => {
   try {
     const name = req.body.name;
@@ -41,7 +39,6 @@ app.post('/participants', async (req, res) => {
       .collection('participants')
       .find({ name: name })
       .toArray();
-    console.log(participantName);
 
     const validation = nameSchema.validate(name, { abortEarly: true });
     if (validation.error) {
@@ -95,10 +92,10 @@ app.post('/messages', async (req, res) => {
       abortEarly: true,
     });
 
-
     if (validation.error) {
       console.log(validation.error.details);
       res.sendStatus(422);
+
     } else {
       const messages = await db.collection('messages').insertOne({
         to: to,
@@ -140,8 +137,17 @@ app.get('/messages', async (req, res) => {
   }
 });
 
-app.post('/status', (req, res) => {
-  //primeiro fazer validacao dos usuarios
+app.post('/status', async (req, res) => {
+  const participant = await db
+      .collection('participants')
+      .find({ name: req.headers.user })
+      .toArray();
+  if(participant.length < 1) {
+    res.sendStatus(404)
+  } else {
+    await db.collection('participants').updateOne({name: participant.name}, {$set: {lastStatus: Date.now()}})
+    res.sendStatus(200);
+  }
 });
 
 function checkStatus() {}
