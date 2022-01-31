@@ -150,11 +150,12 @@ app.post('/status', async (req, res) => {
   }
 });
 
-setInterval(checkStatus, 5000)
-const timeLimit = Date.now() - 10000
-async function checkStatus() {
+setInterval(async () => {
+  const timeLimit = Date.now() - 10000
   await db.collection('participants').deleteMany({lastStatus: {$lt: timeLimit}})
-}
+
+}, 15000)
+
 
 app.listen(5000, () => {
   console.log('Listening on port 5000');
