@@ -152,7 +152,19 @@ app.post('/status', async (req, res) => {
 
 setInterval(async () => {
   const timeLimit = Date.now() - 10000
+  const inactiveParticipants = await db.collection('participants').find({lastStatus: {$lt: timeLimit}}).toArray()
   await db.collection('participants').deleteMany({lastStatus: {$lt: timeLimit}})
+
+  console.log(inactiveParticipants)
+  inactiveParticipants.map(async inactiveParticipant => {
+    await db.collection('messages').insertOne({
+      from: inactiveParticipant.name,
+      to: 'Todos',
+      text: 'sai da sala...',
+      type: 'status',
+      time: dayjs(Date.now()).format('HH:mm:ss')
+    })
+  })
 
 }, 15000)
 
